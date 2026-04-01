@@ -3,143 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cửa Hàng Trực Tuyến | DummyJSON</title>
-    
-    <!-- Link Bootstrap 5 chuẩn (Fix lỗi link cũ) -->
-    <link href="https://jsdelivr.net" rel="stylesheet">
-    
+    <title>Cửa Hàng Trực Tuyến</title>
+    <!-- Fix: Thêm link Bootstrap 5 chuẩn -->
+    <link href="https://cdn.jsdelivr.net" rel="stylesheet">
     <style>
-        :root { --primary-color: #d9534f; --bg-gray: #f8f9fa; }
-        body { background-color: var(--bg-gray); font-family: 'Inter', system-ui, sans-serif; }
-
-        /* Card Customization */
-        .product-card { 
-            border: none; border-radius: 15px; overflow: hidden; 
-            transition: all 0.3s ease; background: #fff; height: 100%;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-        .product-card:hover { transform: translateY(-8px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
-
-        /* Image Handling */
-        .img-wrapper { 
-            height: 200px; display: flex; align-items: center; 
-            justify-content: center; background: #fff; padding: 20px; position: relative;
-        }
-        .img-wrapper img { max-height: 100%; max-width: 100%; object-fit: contain; }
-
-        /* Badge & Price */
-        .discount-tag { 
-            position: absolute; top: 12px; right: 12px; background: var(--primary-color); 
-            color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.75rem; 
-        }
-        .price-text { font-size: 1.25rem; color: var(--primary-color); font-weight: 800; }
-        
-        /* Text Truncate 2 lines */
-        .product-title {
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-            overflow: hidden; height: 2.8rem; font-size: 1rem; line-height: 1.4;
-        }
-        
-        .pagination .page-link { border-radius: 8px; margin: 0 3px; color: #333; border: none; }
-        .pagination .active .page-link { background-color: #333; color: #fff; }
+        body { background-color: #f4f4f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border: none; border-radius: 12px; transition: 0.3s; box-shadow: 0 4px 8px rgba(0,0,0,0.05); height: 100%; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #fff; padding: 15px; border-radius: 12px 12px 0 0; overflow: hidden; }
+        .img-container img { max-height: 100%; max-width: 100%; object-fit: contain; }
+        .badge-discount { position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 0.85rem; z-index: 10; }
+        .price { font-size: 1.2rem; color: #d9534f; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container py-5">
-    <!-- Header Section -->
-    <div class="row align-items-center mb-5">
-        <div class="col-lg-6">
-            <h1 class="fw-bold mb-1">🛍️ Khám Phá Sản Phẩm</h1>
-            <div id="statusLabel" class="badge rounded-pill bg-light text-dark border shadow-sm">Đang kiểm tra API...</div>
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="fw-bold text-dark">🛍️ DummyJson</h2>
+            <div id="statusLabel" class="badge bg-secondary">Đang kết nối...</div>
         </div>
-        <div class="col-lg-6 d-flex justify-content-lg-end mt-4 mt-lg-0 gap-3">
-            <select id="sortSelect" class="form-select w-auto border-0 shadow-sm" onchange="resetToPageOne()">
-                <option value="default">Sắp xếp: Mặc định</option>
+        <div class="col-md-6 d-flex justify-content-md-end mt-3 mt-md-0">
+            <select id="sortSelect" class="form-select w-auto" onchange="currentPage=1; renderUI()">
+                <option value="default">Mặc định</option>
                 <option value="price-asc">Giá: Thấp đến Cao</option>
                 <option value="price-desc">Giá: Cao đến Thấp</option>
-                <option value="discount">Ưu đãi tốt nhất</option>
+                <option value="discount">Giảm giá nhiều nhất</option>
             </select>
         </div>
     </div>
 
-    <!-- Product Grid -->
     <div id="productGrid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-        <!-- Render động -->
+        <!-- Sản phẩm sẽ render ở đây -->
     </div>
 
-    <!-- Pagination -->
-    <nav class="mt-5 d-flex justify-content-center">
-        <ul id="pagination" class="pagination shadow-sm p-2 bg-white rounded-pill"></ul>
+    <nav class="mt-5">
+        <ul id="pagination" class="pagination justify-content-center"></ul>
     </nav>
 </div>
 
 <script>
     let allProducts = [];
-    const LIMIT = 8;
+    const LIMIT = 8; // Tăng số lượng hiển thị mỗi trang cho đẹp
     let currentPage = 1;
 
-    // Lấy dữ liệu từ API Online
     async function fetchData() {
         const status = document.getElementById('statusLabel');
         try {
-            // Lấy 100 sản phẩm để phân trang mượt hơn
-            const res = await fetch('https://dummyjson.com');
-            if (!res.ok) throw new Error("Lỗi kết nối");
+            // Fix: Endpoint đúng của DummyJSON
+            const res = await fetch('https://dummyjson.com/products');
+            if (!res.ok) throw new Error();
             const data = await res.json();
-            
             allProducts = data.products;
-            status.innerHTML = `<span class="text-success">●</span> API Online (${allProducts.length} sản phẩm)`;
+            status.innerText = "✅ API Online";
+            status.className = "badge bg-success";
         } catch (e) {
-            status.innerHTML = `<span class="text-danger">●</span> Chế độ Offline`;
-            allProducts = getMockData(); // Data dự phòng nếu đứt mạng
+            allProducts = [
+                { id: 1, title: "iPhone 15 Pro", price: 999, discountPercentage: 5, thumbnail: "https://via.placeholder.com" },
+                { id: 2, title: "Laptop Gaming", price: 1500, discountPercentage: 25, thumbnail: "https://via.placeholder.com" },
+                { id: 3, title: "Sony Headphone", price: 200, discountPercentage: 50, thumbnail: "https://via.placeholder.com" }
+            ];
+            status.innerText = "⚠️ Dữ liệu Offline";
+            status.className = "badge bg-warning text-dark";
         }
         renderUI();
     }
 
     function renderUI() {
-        const grid = document.getElementById('productGrid');
         const sortVal = document.getElementById('sortSelect').value;
-        
         let list = [...allProducts];
 
-        // Sắp xếp
+        // 1. Sắp xếp
         if (sortVal === 'price-asc') list.sort((a, b) => a.price - b.price);
         else if (sortVal === 'price-desc') list.sort((a, b) => b.price - a.price);
         else if (sortVal === 'discount') list.sort((a, b) => b.discountPercentage - a.discountPercentage);
 
-        // Phân trang
-        const totalPages = Math.ceil(list.length / LIMIT);
+        // 2. Phân trang
         const start = (currentPage - 1) * LIMIT;
         const pageItems = list.slice(start, start + LIMIT);
 
+        // 3. Render Card
+        const grid = document.getElementById('productGrid');
+        if(pageItems.length === 0) {
+            grid.innerHTML = '<p class="text-center w-100">Không có sản phẩm nào.</p>';
+            return;
+        }
+
         grid.innerHTML = pageItems.map(p => `
             <div class="col">
-                <div class="product-card position-relative">
-                    <span class="discount-tag">-${Math.round(p.discountPercentage)}%</span>
-                    <div class="img-wrapper">
+                <div class="card position-relative">
+                    <span class="badge-discount">-${Math.round(p.discountPercentage)}%</span>
+                    <div class="img-container">
                         <img src="${p.thumbnail}" alt="${p.title}" loading="lazy">
                     </div>
-                    <div class="p-3 d-flex flex-column">
-                        <h6 class="product-title fw-bold mb-2" title="${p.title}">${p.title}</h6>
-                        <p class="text-muted small mb-3 text-truncate">${p.category.toUpperCase()}</p>
-                        <div class="mt-auto d-flex align-items-center justify-content-between">
-                            <span class="price-text">$${p.price.toLocaleString()}</span>
-                            <button class="btn btn-sm btn-outline-dark rounded-circle">＋</button>
-                        </div>
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title text-truncate fw-bold" title="${p.title}">${p.title}</h6>
+                        <p class="card-text text-muted small text-truncate">${p.description || ''}</p>
+                        <div class="mt-auto price">$${p.price.toLocaleString()}</div>
                     </div>
                 </div>
             </div>
         `).join('');
 
-        renderPagination(totalPages);
+        renderPagination(list.length);
     }
 
     function renderPagination(total) {
+        const totalPages = Math.ceil(total / LIMIT);
         let html = '';
-        for (let i = 1; i <= total; i++) {
+        for (let i = 1; i <= totalPages; i++) {
             html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
-                <a class="page-link shadow-none" href="javascript:void(0)" onclick="changePage(${i})">${i}</a>
+                <button class="page-link shadow-none" onclick="changePage(${i})">${i}</button>
             </li>`;
         }
         document.getElementById('pagination').innerHTML = html;
@@ -148,22 +123,10 @@
     window.changePage = (p) => {
         currentPage = p;
         renderUI();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Cuộn lên đầu khi sang trang
     };
-
-    window.resetToPageOne = () => {
-        currentPage = 1;
-        renderUI();
-    };
-
-    function getMockData() {
-        return [{ id: 1, title: "Lỗi kết nối API", price: 0, discountPercentage: 0, thumbnail: "", category: "system" }];
-    }
 
     fetchData();
 </script>
-
-<!-- Bootstrap JS -->
-<script src="https://jsdelivr.net"></script>
 </body>
 </html>
